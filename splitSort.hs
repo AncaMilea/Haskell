@@ -6,18 +6,20 @@
 
 splitSort :: Ord a => [a] -> [[a]]
 splitSort ns| length ns <3 =[ns]
-            |otherwise = splitADE (take 2 ns) (drop 2 ns)
+            | otherwise = splitADE (take 2 ns) (drop 2 ns)
 
 splitADE :: Ord a =>[a]->[a]->[[a]]
-splitADE xs ns | (length ns == 0) = [xs]
-               | (length ns ==1) && ((last xs < head ns && head xs < head(tail xs) ) || (last xs > head ns && head xs > head(tail xs))) = splitADE (xs++[head ns]) (drop 1 ns)
-               | (length ns ==1) && ((last xs < head ns && head xs >= head(tail xs) ) || (last xs > head ns && head xs <= head(tail xs))) = xs: splitADE ([head ns]) (drop 1 ns)
-               | (length ns ==1) && ((last xs == head ns && head xs == head(tail xs))) = splitADE (xs++[head ns]) (drop 1 ns)
-               | (length ns ==1) && ((last xs == head ns && not (head xs == head(tail xs)))) = xs: splitADE ([head ns]) (drop 1 ns)
-               | (length xs ==1) && ((last xs < head ns)|| (last xs > head ns)) = splitADE (xs++[head ns]) (drop 1 ns)
-               | (length xs ==1) && (last xs == head ns) = splitADE (xs++[head ns]) (drop 1 ns)
-               | ((last xs < head ns && head xs < head(tail xs) ) || (last xs > head ns && head xs > head(tail xs))) = splitADE (xs++[head ns]) (drop 1 ns)
-               | ((last xs < head ns && head xs >= head(tail xs) ) || (last xs > head ns && head xs <= head(tail xs))) = xs: splitADE ([head ns]) (drop 1 ns)
-               | ((last xs == head ns && head xs == head(tail xs))) = splitADE (xs++[head ns]) (drop 1 ns)
-               | ((last xs == head ns && not (head xs == head(tail xs)))) = xs: splitADE ([head ns]) (drop 1 ns)
+splitADE xs (n:ns) 
+               | (length ns ==0) && (length xs ==1) && ((last xs < n)|| (last xs > n)) = (xs++[n]) :[]
+               | (length ns ==0) && (length xs ==1) && (last xs == n) = (xs++[n]) :[]
+               | (length ns ==0) && ((last xs < n && head xs < head(tail xs) ) || (last xs > n && head xs > head(tail xs))) = (xs++[n]) : []
+               | (length ns ==0) && ((last xs < n && head xs >= head(tail xs) ) || (last xs > n && head xs <= head(tail xs))) = xs : [n] : [] 
+               | (length ns ==0) && ((last xs == n && head xs == head(tail xs))) = (xs++[n]) : []
+               | (length ns ==0) && ((last xs == n && not (head xs == head(tail xs)))) = xs:[n] : []
+               | (length xs ==1) && ((last xs < n)|| (last xs > n)) = splitADE (xs++[n]) (ns)
+               | (length xs ==1) && (last xs == n) = splitADE (xs++[n]) (ns)
+               | ((last xs < n && head xs < head(tail xs) ) || (last xs > n && head xs > head(tail xs))) = splitADE (xs++[n]) (ns)
+               | ((last xs < n && head xs >= head(tail xs) ) || (last xs > n && head xs <= head(tail xs))) = xs: splitADE ([n]) (ns)
+               | ((last xs == n && head xs == head(tail xs))) = splitADE (xs++[n]) (ns)
+               | ((last xs == n && not (head xs == head(tail xs)))) = xs: splitADE ([n]) (ns)
                
