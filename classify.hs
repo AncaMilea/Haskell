@@ -16,32 +16,50 @@
 data DegreeClass = First | UpperSecond | LowerSecond | Third deriving (Eq, Show)
 data ModuleResult = ModuleResult { credit :: Float, mark :: Int} deriving Show
 
+getCredit :: ModuleResult->Float
+getCredit (ModuleResult{credit=c, mark=m})= read(show c) ::Float
+
 getMark :: ModuleResult->Int
 getMark (ModuleResult{credit=c, mark=m})= read(show m) ::Int
 
 classify :: [[ModuleResult]] -> DegreeClass
 classify ms 
-           | result >=40 && result <=49 = Third
-           | result >=50 && result<=59 = LowerSecond
-           | result >=60 && result<=69 = UpperSecond
-           | result >=70 && result<=79 = First
-        where
-        	result= degreeName ms
+           | (length ms)>=3 = classification ms 
+           | otherwise = error "wrong input"
+
+classification :: [[ModuleResult]] -> DegreeClass
+classification ms 
+           | (result >=40 && result<=49) = Third
+           | (result >=50 && result<=59) = LowerSecond
+           | (result >=60 && result<=69) = UpperSecond
+           | (result >=70) = First
+         where
+            result= degreeName (avgModuleYear ms)
 
 degreeBSc :: [[ModuleResult]] -> Int
-degreeBSc [] = 0
-degreeBSc ms = round((calcModule (ms !! 1))/3) + round((calcModule (ms !! 2))*(2/3))
+degreeBSc ms = ((calcModule (ms !! 1))`div` 3) + (calcModule (ms !! 2)*2)`div`3
 
 degreeMaster :: [[ModuleResult]] -> Int
-degreeMaster [] = 0
-degreeMaster ms = round((calcModule (ms !! 1)/5) + round((calcModule (ms !! 2))*(2/5)) + round((calcModule (ms !! 3))*(2/5))
+degreeMaster ms = ((calcModule (ms !! 1) )`div` 5) + (((calcModule (ms !! 2))*2)`div`5) + ((calcModule (ms !! 3))*2)`div`5
 
 calcModule :: [ModuleResult] -> Int
 calcModule [] = 0
 calcModule (m:ms) = (getMark  m) + calcModule ms
 
+calcCredit :: [ModuleResult] -> Float
+calcCredit [] = 0
+calcCredit (m:ms) = (getCredit  m) + calcCredit ms
+
+avgModuleYear :: [[ModuleResult]] ->[[ModuleResult]]
+avgModuleYear [] = []
+avgModuleYear (x:xs) 
+              | ((length x)==1) = x : avgModuleYear xs
+              | otherwise = [ModuleResult c m ] : avgModuleYear xs
+             where
+                c= calcCredit x
+                m= (calcModule x) `div` (length x)
+
 degreeName :: [[ModuleResult]] -> Int
-degreeName [] = 0
 degreeName ms 
              | ((length ms) == 3) = degreeBSc ms
              | ((length ms) == 4) = degreeMaster ms
