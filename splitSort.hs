@@ -5,17 +5,19 @@
 -- consumes as many elements as possible to use in the current sub-list before starting a new one. 
 
 splitSort :: Ord a => [a] -> [[a]]
-splitSort ns| length ns <3 =[ns]
+splitSort ns
+            | length ns ==0 =[]
+            | length ns <3 =[ns]
             | otherwise = splitADE (take 2 ns) (drop 2 ns)
 
 splitADE :: Ord a =>[a]->[a]->[[a]]
+splitADE xs (n:[])  
+               | (length xs ==1) && ((last xs < n)|| (last xs > n) || (last xs == n)) = (xs++[n]) :[]
+               | ((last xs < n && head xs < head(tail xs) ) || (last xs > n && head xs > head(tail xs))) = (xs++[n]) : []
+               | ((last xs < n && head xs >= head(tail xs) ) || (last xs > n && head xs <= head(tail xs))) = xs : [n] : [] 
+               | ((last xs == n && head xs == head(tail xs))) = (xs++[n]) : []
+               | ((last xs == n && not (head xs == head(tail xs)))) = xs:[n] : []
 splitADE xs (n:ns) 
-               | (length ns ==0) && (length xs ==1) && ((last xs < n)|| (last xs > n)) = (xs++[n]) :[]
-               | (length ns ==0) && (length xs ==1) && (last xs == n) = (xs++[n]) :[]
-               | (length ns ==0) && ((last xs < n && head xs < head(tail xs) ) || (last xs > n && head xs > head(tail xs))) = (xs++[n]) : []
-               | (length ns ==0) && ((last xs < n && head xs >= head(tail xs) ) || (last xs > n && head xs <= head(tail xs))) = xs : [n] : [] 
-               | (length ns ==0) && ((last xs == n && head xs == head(tail xs))) = (xs++[n]) : []
-               | (length ns ==0) && ((last xs == n && not (head xs == head(tail xs)))) = xs:[n] : []
                | (length xs ==1) && ((last xs < n)|| (last xs > n)) = splitADE (xs++[n]) (ns)
                | (length xs ==1) && (last xs == n) = splitADE (xs++[n]) (ns)
                | ((last xs < n && head xs < head(tail xs) ) || (last xs > n && head xs > head(tail xs))) = splitADE (xs++[n]) (ns)
