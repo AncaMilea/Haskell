@@ -12,9 +12,26 @@ miniSubList (x:xs) = [x:sublist | sublist <- miniSubList xs] ++ miniSubList xs
 noEmpty :: [a] -> [[a]]
 noEmpty xs = filter (not. null) (miniSubList xs) 
 
-subListoflist :: [[a]] -> [[[a]]]
+subListoflist :: (Eq a) => [[a]] -> [[[a]]]
 subListoflist []= [[]]
-subListoflist (x:xs) = noEmpty x : subListoflist xs
+subListoflist (x:xs) = sorted : subListoflist xs
+                    where
+                        sorted= listDesc (length (head noDup)) noDup
+                        noDup= noDuplicateElem list 
+                        list= noEmpty x
+
+noDuplicateElem :: (Eq a) => [[a]] -> [[a]]
+noDuplicateElem [[]] = [[]]
+noDuplicateElem [x] = [x]
+noDuplicateElem (x:xs) = x : [ k  | k <- noDuplicateElem(xs), k /=x ]
+
+lengthDesc :: Eq a =>Int-> [[a]] ->[[a]]
+lengthDesc n ys = [y|y<-ys, length y == n]
+
+
+listDesc :: Eq a => Int ->[[a]] ->[[a]]
+listDesc 1 xs = lengthDesc 1 xs
+listDesc n xs = (lengthDesc n xs) ++ listDesc (n-1) xs 
 
 count :: Eq a =>[a] -> [[[a]]] ->Int
 count x yss = length [y|ys<-yss, y<-ys, y==x]

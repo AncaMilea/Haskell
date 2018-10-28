@@ -50,6 +50,10 @@ calcCredit :: [ModuleResult] -> Float
 calcCredit [] = 0
 calcCredit (m:ms) = (getCredit  m) + calcCredit ms
 
+calcModuleY :: [ModuleResult] -> Int
+calcModuleY [] = 0
+calcModuleY (m:ms) = ((getMark m) * round(getCredit m)) +calcModuleY ms
+
 avgModuleYear :: [[ModuleResult]] ->[[ModuleResult]]
 avgModuleYear [] = []
 avgModuleYear (x:xs) 
@@ -57,9 +61,10 @@ avgModuleYear (x:xs)
               | otherwise = [ModuleResult c m ] : avgModuleYear xs
              where
                 c= calcCredit x
-                m= (calcModule x) `div` (length x)
+                m= (calcModuleY x) `div` round(c)
 
 degreeName :: [[ModuleResult]] -> Int
 degreeName ms 
              | ((length ms) == 3) = degreeBSc ms
              | ((length ms) == 4) = degreeMaster ms
+
