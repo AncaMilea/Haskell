@@ -8,14 +8,12 @@
 
 data Rectangle = Rectangle (Int, Int) (Int, Int) deriving (Eq, Show)
 drawEllipse :: Float -> Float -> Float -> Float -> [Rectangle]
-drawEllipse x y a b = makeRect tup
-                  where 
-                    tup= calcTup x y a b interval
-                    interval= max a b
+drawEllipse x y a b = calcTup x y a b 
 
-calcTup :: Float -> Float -> Float -> Float -> Float-> [(Int,Int)]
-calcTup x y a b interv = [(round(x1),round(y1)) |x1<-[-interv..interv],y1<-[-interv..interv], ((((x1 - x)^2)/(a^2)) + (((y1 - y)^2)/(b^2)))==1]
+calcTup :: Float -> Float -> Float -> Float -> [Rectangle]
+calcTup x y a b= [Rectangle(x1,y1) (x2,y2) |x1<-interv1,y1<-interv2, x2<-interv1,y2<-interv2, ((((fromIntegral(x1) - x)^2)/(a^2)) + (((fromIntegral(y1) - y)^2)/(b^2)))<=1 && ((((fromIntegral(x2) - x)^2)/(a^2)) + (((fromIntegral(y2) - y)^2)/(b^2)))<=1 && ((((fromIntegral(x1) - x)^2)/(a^2)) + (((fromIntegral(y2) - y)^2)/(b^2)))<=1 && ((((fromIntegral(x2) - x)^2)/(a^2)) + (((fromIntegral(y1) - y)^2)/(b^2)))<=1]
+                     where 
+                        interv1 = [(ceiling(x-a)) .. (floor(x+a))]
+                        interv2 = [(ceiling(y-b)) .. (floor(y+b))]
 
-makeRect:: [(Int,Int)]->[Rectangle]
-makeRect [] = []
-makeRect (x:xs) = Rectangle x (last xs):makeRect (init xs)
+

@@ -1,0 +1,12 @@
+-- Exercise 10
+-- In this exercise, a rectangle is represented by a pair of integer valued coordinates identifying its bottom-left
+-- and top-right corners in that order. If the top-right corner is below or to the left of the second corner, the
+-- rectangle is empty. These rectangles all have horizontal and vertical edges. You are given a list of such
+-- rectangles representing a black and white image constructed using these rectangles. Each rectangle’s corners
+-- and edges are considered to be part of the image, as well as all points with integer valued coordinates in each
+-- rectangle’s interior. If the rectangles overlap, there may be a shorter list that represents the same image. For
+-- example, [Rectangle (0,0) (2,2), Rectangle (0,0) (1,1)] can be simplified to [Rectangle (0,0) (2,2)] since the second
+-- rectangle is wholly contained within the first one. More complex scenarios are possible. Write a function
+-- simplifyRectangleList that gives a minimal sequence which represents the same image as the originally
+-- supplied rectangle list. You do not need to implement an optimal solution, as this requires sophisticated data
+-- structures, but your solution is expected to have polynomial time complexity rather than exponential.

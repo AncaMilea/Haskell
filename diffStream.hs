@@ -6,28 +6,8 @@
 
 differentStream :: [[Int]] -> [Int]
 differentStream [] = []
-differentStream (l:ls) = split id [l] ls
+differentStream ls = d ls 0
 
-split :: ([[a]] -> [[a]]) -> [[a]] -> [[a]] -> [a]
-split a [] ls      = case ls of
-                          []     -> split id [] (a [])
-                          (l:ls) -> split id (a [l]) ls
-split a (l : ls) r = case l of
-                          []     -> split a ls r
-                          (x:xs) -> x : split (a . (xs :)) ls r
-
-isDifferentStream :: [[Int]] -> [Int] -> Int -> Bool
-isDifferentStream nns ns n = 
-    let ns' = take n ns
-        nns' = map (take n) (take n nns) 
-    in length ns' == 10 && 
-       all (\xs -> length xs == 10) nns' &&
-       not (ns' `elem` nns')
-
-testStream1 :: [[Int]]
-testStream1 = [0..]:testStream1
-
-testStream2 :: [[Int]]
-testStream2 = repeatStream 0
-repeatStream :: Int -> [[Int]]
-repeatStream x = [x..]:(repeatStream (x+1))
+d:: [[Int]]->Int->[Int]
+d [] pos = []
+d (l:ls) pos = ((l !! pos) +1):d ls (pos+1)
