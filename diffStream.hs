@@ -10,4 +10,8 @@ differentStream ls = d ls 0
 
 d:: [[Int]]->Int->[Int]
 d [] pos = []
-d (l:ls) pos = ((l !! pos) +1):d ls (pos+1)
+d (l:ls) pos
+           | nr>0 =0:d ls (pos+1)
+           | nr ==0 =1:d ls (pos+1)
+           where
+           nr = ((l !! pos))

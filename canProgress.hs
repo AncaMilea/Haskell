@@ -25,13 +25,13 @@ canProgress ms
                | (compC==0) && (sumC==totalC) =True
                | otherwise = False
             where
-                totalC= totalCredits ms
+                totalC= totalCreditsProgress ms
                 sumC= sumCredits ms
                 compC= compensateModule ms
 
-totalCredits :: [ModuleResult]->Float
-totalCredits [] =0
-totalCredits (m:ms) = (getCredit m)+ (totalCredits ms)
+totalCreditsProgress :: [ModuleResult]->Float
+totalCreditsProgress [] =0
+totalCreditsProgress (m:ms) = (getCredit m)+ (totalCreditsProgress ms)
 
 compensateModule :: [ModuleResult] -> Int
 compensateModule ms = length[x | x<-ms, (getMark x) >=25, (getMark x) <40]

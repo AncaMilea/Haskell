@@ -34,21 +34,61 @@ classification ms
            | (result >=60 && result<=69) = UpperSecond
            | (result >=70) = First
          where
-            result= degreeName (avgModuleYear ms)
+            result= verifyUp ms
+
+verifyUp :: [[ModuleResult]] ->Int
+verifyUp ms
+          | totalCredits>=68, totalCredits<70 = calcCreditUp (drop 1 ms) 70 totalCredits
+          | totalCredits>=58, totalCredits<60 = calcCreditUp (drop 1 ms) 60 totalCredits
+          | totalCredits>=48, totalCredits<50 = calcCreditUp (drop 1 ms) 50 totalCredits
+          | otherwise = totalCredits
+        where 
+          totalCredits= degreeName (avgModuleYear ms)
+
+calcCreditUp ::[[ModuleResult]]->Int->Int->Int
+calcCreditUp ms least totalmarks
+           | mark >= cr = least
+           | otherwise = totalmarks
+          where
+            cr= round(cr1) `div` 2
+            mark= searchUp ms least 1
+            cr1= (totalCredits ms 1)
+
+
+searchUp [] least part = 0
+searchUp (m:ms) least part= (calcModuleUp m least)*part + searchUp ms least 2
+
+calcModuleUp :: [ModuleResult] -> Int ->Int
+calcModuleUp [] least=0;
+calcModuleUp (m:ms) least
+               | (getMark m)>=least = round(getCredit m) + calcModuleUp ms least
+               | otherwise = calcModuleUp ms least
 
 degreeBSc :: [[ModuleResult]] -> Int
-degreeBSc ms = ((calcModule (ms !! 1))`div` 3) + (calcModule (ms !! 2)*2)`div`3
+degreeBSc ms = (((calcModule (ms !! 1))) + (calcModule (ms !! 2)*2)) `div` round(tot)
+          where
+            tot= totalCredits  (drop 1 ms) 1;
 
 degreeMaster :: [[ModuleResult]] -> Int
-degreeMaster ms = ((calcModule (ms !! 1) )`div` 5) + (((calcModule (ms !! 2))*2)`div`5) + ((calcModule (ms !! 3))*2)`div`5
+degreeMaster ms = (((calcModule (ms !! 1) )) + (((calcModule (ms !! 2))*2)) + ((calcModule (ms !! 3))*2)) `div` round(tot)
+          where
+            tot= totalCredits  (drop 1 ms) 1;
+
+totalCredits :: [[ModuleResult]]->Int->Float
+totalCredits [] n = 0
+totalCredits (m:ms) n = (calcCredit m)*fromIntegral(n) +totalCredits ms 2
 
 calcModule :: [ModuleResult] -> Int
-calcModule [] = 0
-calcModule (m:ms) = (getMark  m) + calcModule ms
+calcModule (m:ms) = (getMark  m)*round(getCredit m)
+
+degreeName :: [[ModuleResult]] -> Int
+degreeName ms 
+             | ((length ms) == 3) = degreeBSc ms
+             | ((length ms) == 4) = degreeMaster ms
 
 calcCredit :: [ModuleResult] -> Float
 calcCredit [] = 0
-calcCredit (m:ms) = (getCredit  m) + calcCredit ms
+calcCredit (c:cs) = (getCredit  c) + calcCredit cs
 
 calcModuleY :: [ModuleResult] -> Int
 calcModuleY [] = 0
@@ -63,8 +103,4 @@ avgModuleYear (x:xs)
                 c= calcCredit x
                 m= (calcModuleY x) `div` round(c)
 
-degreeName :: [[ModuleResult]] -> Int
-degreeName ms 
-             | ((length ms) == 3) = degreeBSc ms
-             | ((length ms) == 4) = degreeMaster ms
-
+                
