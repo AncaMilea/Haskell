@@ -35,21 +35,24 @@ import Parsing
 data Arit = App Arit Arit| Section Arit | Add Arit Arit | Var Int deriving (Show,Eq)
 data LamExpr = LamApp LamExpr LamExpr | LamAbs Int LamExpr | LamVar Int deriving (Show,Eq)
 
-varExpression :: Parser Arit
-varExpression = do
+plusArg= (LamAbs 1 (LamAbs 2 (LamAbs 3 (LamApp (LamVar 2) (LamApp (LamApp (LamVar 1) (LamVar 2)) (LamVar 3))))))
+
+
+varArit :: Parser Arit
+varArit = do
   i <- nat
   return (Var i)
 
 
-addExpression :: Parser Arit
-addExpression = do e1 <- token allExpressions
-                   symbol "+"
-                   e2 <- token evenlower
-                   return (Add e1 e2)
+addArit :: Parser Arit
+addArit = do e1 <-  allArit
+             symbol "+"
+             e2 <-  lowerArit
+             return (Add e1 e2)
 
 secArit :: Parser Arit
 secArit = do symbol "(+"
-             e1 <-lowerExpr
+             e1 <-lowerArit
              symbol ")"
              return (Section e1)
 
@@ -59,46 +62,53 @@ secArit = do symbol "(+"
 --            where
 --              f m n= App m n  
 
-allExpressions :: Parser Arit
-allExpressions = do val<- token varExpression
-                    return val
-               <|> do symbol "("
-                      sec <- token evenlower
-                      symbol ")"
-                      return sec
-               <|> do section <- token secArit
-                      value <- token evenlower
-                      return (App section value)
+-- allArit :: Parser Arit
+-- allArit = do val<- varArit
+--                     return val
+--                <|> do symbol "("
+--                       sec <- lowerArit
+--                       symbol ")"
+--                       return sec
+--                <|> do section <- token secArit
+--                       value <- token lowerArit
+--                       return (App section value)
 
-lowerExpr :: Parser Arit
-lowerExpr = evenlower <|> secArit <|> bottomExpr
-evenlower = addExpression <|> allExpressions
-bottomExpr =  varExpression <|> empty
 
-compil::String ->Maybe Arit
-compil s =  case (parse lowerExpr s) of
-  [(n, [])] -> Just n
-  _ -> Nothing
+firstArit :: Parser Arit
+firstArit = do val<- varArit
+               return val
+ 
+secondArit:: Parser Arit
+secondArit = do symbol "("
+                sec <- lowerArit
+                symbol ")"
+                return sec
+
+thirdArit:: Parser Arit
+thirdArit= do section <- secArit
+              value <- lowerArit
+              return (App section value)
+
+highArit :: Parser Arit
+highArit = lowerArit <|> secArit <|> downArit
+lowerArit = addArit <|> allArit
+allArit = firstArit <|> secondArit <|> thirdArit
+downArit =  varArit <|> empty
 
 transformeStart :: Arit -> LamExpr
 transformeStart x@(Var z)=(LamAbs 1 (LamAbs 2 (transforme z)))
-transformeStart s@(Section y@(Var z))=(LamApp (transformeStart (Var z)) (transformeSec (s)))
-transformeStart a@(Add e1@(Var d) e2@(Var c)) = (LamApp (transformeStart (Var (d+c) )) (transformeSec (Section (Var (d+c)))))
+transformeStart s@(Section y@(Var z))=(LamApp (transformeStart (Var z)) (plusArg))
+transformeStart (Section e@(Add e1@(Var d) e2@(Var c))) = (LamApp (transformeStart e) (plusArg))
+transformeStart (Section a@(App e1 e2)) = (LamApp (transformeStart a) (plusArg))
+transformeStart a@(Add e1@(Var d) e2@(Var c)) = (LamApp (transformeStart (Section (Var c))) (transformeStart (Var (d))))
+transformeStart (App e1 e2)=(LamApp (transformeStart e1) (transformeStart e2))
 --transformeStart a@(Add e1 e2) = 
-
-transformeSec :: Arit -> LamExpr
-transformeSec (Section x@(Var z)) = (LamAbs 1 (LamAbs 2 (LamAbs 3 (LamApp (LamVar 2) (LamApp (transforme (z)) (LamVar 3))))))
 
 transforme :: Int -> LamExpr
 transforme  0 = (LamVar 2)
 transforme  x = (LamApp (LamVar 1) (transforme (x-1)))
 
 compileArith :: String -> Maybe LamExpr
--- replace the definition below with your solution
-compileArith s = Nothing
-
---lamAbF :: Int ->Int -> LamExpr
--- lamAbF x y
---           |x /=y = (LamAbs x (lamAbF (x+1) y) )
---           |x ==y = (LamAbs x)
---succChurch = \n -> \f -> \x -> f (n f x)
+compileArith s =  case (parse highArit s) of
+  [(n, [])] -> Just (transformeStart(n))
+  _ -> Nothing
