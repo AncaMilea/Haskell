@@ -32,7 +32,7 @@
 import Data.Char
 import Parsing
 
-data Arit = App Arit Arit | Section Arit | Add Arit Arit | Var Int deriving (Show,Eq)
+data Arit = App Arit Arit| Section Arit | Add Arit Arit | Var Int deriving (Show,Eq)
 data LamExpr = LamApp LamExpr LamExpr | LamAbs Int LamExpr | LamVar Int deriving (Show,Eq)
 
 varExpression :: Parser Arit
@@ -42,35 +42,42 @@ varExpression = do
 
 
 addExpression :: Parser Arit
-addExpression = do symbol "+"
-                   e2 <- allExpressions
-                   return e2
+addExpression = do e1 <- token allExpressions
+                   symbol "+"
+                   e2 <- token evenlower
+                   return (Add e1 e2)
 
 secArit :: Parser Arit
 secArit = do symbol "(+"
-             e1 <-allExpressions
+             e1 <-lowerExpr
              symbol ")"
              return (Section e1)
 
-inOrder :: [Arit] -> Arit
-inOrder (x:[])=x
-inOrder (x:y:xs)= foldl f (Add x y) xs
-           where
-             f m n= Add m n  
+-- inOrder :: [Arit] -> Arit
+-- inOrder (x:[])=x
+-- inOrder (x:y:xs)= foldl f (App x y) xs
+--            where
+--              f m n= App m n  
 
 allExpressions :: Parser Arit
-allExpressions = do 
-                 xs<-many(lowerExpr)
-                 return (inOrder xs) 
+allExpressions = do val<- token varExpression
+                    return val
+               <|> do symbol "("
+                      sec <- token evenlower
+                      symbol ")"
+                      return sec
+               <|> do section <- token secArit
+                      value <- token evenlower
+                      return (App section value)
 
 lowerExpr :: Parser Arit
-lowerExpr = evenlower <|> secArit 
-evenlower = addExpression <|> bottomExpr
+lowerExpr = evenlower <|> secArit <|> bottomExpr
+evenlower = addExpression <|> allExpressions
 bottomExpr =  varExpression <|> empty
 
-compil::String ->Maybe LamExpr
-compil s =  case (parse allExpressions s) of
-  [(n, [])] -> Just (transformeStart (n))
+compil::String ->Maybe Arit
+compil s =  case (parse lowerExpr s) of
+  [(n, [])] -> Just n
   _ -> Nothing
 
 transformeStart :: Arit -> LamExpr

@@ -30,28 +30,22 @@ case,	provided	the	limit	is	3	or	more.		Some	examples	of	this	function	are:-}
 -- (λx	->	λy	->	x)	z	((λt	->	t)	u) 1 (Nothing,	Nothing)					-- limit	exceeded	for	both
 data LamExpr = LamApp LamExpr LamExpr | LamAbs Int LamExpr | LamVar Int deriving (Show,Eq)
 -- Challenge 4
--- count reductions using two different strategies 
--- countReds :: LamExpr -> Int -> (Maybe Int, Maybe Int)
--- -- replace the definition below with your solution
--- countReds e limit = (Nothing, Nothing)
-
--- mult :: Int -> Int -> Int
--- mult = λ x ->λ y -> x * y
 
 countReds :: LamExpr -> Int -> (Maybe Int, Maybe Int)
-countReds e limit = nextBoth e 0 limit
+countReds e limit = reduction e 0 limit
 
-nextBoth :: LamExpr -> Int -> Int -> (Maybe Int, Maybe Int)
-nextBoth a current limit | current > limit          = (Nothing, Nothing)
-                         | a /= nextL && a/= nextR  = (fst $ nextBoth nextL (current+1) limit, snd $ nextBoth nextR (current+1) limit)
-                         | a /= nextL               = (fst $ nextBoth nextL (current+1) limit, Just current)
-                         | a /= nextR               = (Just current, snd $ nextBoth nextR (current+1) limit)
-                         | otherwise                = (Just current, Just current)
+reduction :: LamExpr -> Int -> Int -> (Maybe Int, Maybe Int)
+reduction a counter limit | counter > limit               = (Nothing, Nothing)
+                          | a /= leftRed && a/= rightRed  = (fst (reduction leftRed (counter+1) limit), snd (reduction rightRed (counter+1) limit))
+                          | a /= leftRed                  = (fst (reduction leftRed (counter+1) limit), Just counter)
+                          | a /= rightRed                 = (Just counter, snd (reduction rightRed (counter+1) limit))
+                          | otherwise                     = (Just counter, Just counter)
                          where 
-                            nextL = eval1cbn a 
-                            nextR = eval2cbn a 
+                            leftRed = evalLeftCBV a 
+                            rightRed = evalRightCBV a 
 
 
+--I changed a bit the code given in the lectures
 subst :: LamExpr -> Int -> LamExpr -> LamExpr
 subst (LamVar x) y e | x == y = e
 subst (LamVar x) y e | x /= y = LamVar x
@@ -69,17 +63,21 @@ free x (LamAbs y e) | x == y = False
 free x (LamAbs y e) | x /= y = free x e
 free x (LamApp e1 e2) = (free x e1) || (free x e2)
 
-rename x = 2*x
+rename x = 3*x
+ --it evaluates to the right first and after it is done it does the left part
+evalRightCBV :: LamExpr -> LamExpr
+evalRightCBV (LamVar x) = (LamVar x)
+evalRightCBV (LamAbs x e) = (LamAbs x (evalRightCBV e))
+evalRightCBV (LamApp (LamAbs x e1) e@(LamAbs y e2)) = subst e1 x e
+evalRightCBV (LamApp e@(LamAbs x e1) e2) = subst e1 x e2
+evalRightCBV (LamApp e1 e@(LamVar x)) = LamApp (evalLeftCBV e1) e 
+-- evalRightCBV (LamApp e1 e@(LamAbs x e2)) = LamApp (evalLeftCBV e1) e 
+evalRightCBV (LamApp e1 e2) = LamApp e1 (evalRightCBV e2)
 
-eval1cbn :: LamExpr -> LamExpr
-eval1cbn (LamAbs x e) = (LamAbs x e)
-eval1cbn (LamApp (LamAbs x e1) e2) = subst e1 x e2
-eval1cbn (LamApp e1 e2) = LamApp (eval1cbn e1) e2
-eval1cbn (LamVar x) = (LamVar x)
-
---modified code to evaluate from right hand side instead of left
-eval2cbn :: LamExpr -> LamExpr
-eval2cbn (LamAbs x e) = (LamAbs x e)
-eval2cbn (LamApp (LamAbs x e1) e2) = subst e1 x e2
-eval2cbn (LamApp e1 e2) = LamApp e1 (eval2cbn e2)
-eval2cbn (LamVar x) = (LamVar x)
+evalLeftCBV :: LamExpr -> LamExpr
+evalLeftCBV (LamAbs x e) = (LamAbs x (evalLeftCBV e))
+evalLeftCBV (LamApp (LamAbs x e1) e@(LamAbs y e2)) = subst e1 x e
+evalLeftCBV (LamApp e@(LamVar x) e2) = LamApp e (evalRightCBV e2)
+evalLeftCBV (LamApp e@(LamAbs x e1) e2) = subst e1 x e2
+evalLeftCBV (LamApp e1 e2) = LamApp (evalLeftCBV e1) e2
+evalLeftCBV (LamVar x) = (LamVar x)
